@@ -6,6 +6,10 @@ Built for the Global AI Hackathon (HackCulture / Geek Room), theme **Stale-Answe
 
 The worked example: under protocol version 2, the washout period is 14 days. Version 3 amends it to 28 days. A site that keeps quoting the version 2 answer enrols a participant too early — that can become a protocol deviation for every participant enrolled on the stale rule. 76% of Phase 2/3 protocols are amended, on average 3.3 times, and old answers are never re-checked.
 
+## For judges — no Bifrost install, no API keys needed
+
+**Judges: you do not need to install Bifrost, Tavily, or any API key.** AmendmentWatch runs fully in seeded-offline mode with no keys — see `JUDGES.md` for the 3-step run and the 60-second click-through. Bifrost and Tavily are optional live enhancements only; they never change a label. Pre-run outputs are in `demo/`.
+
 ## Labels
 
 | Label | Meaning |
