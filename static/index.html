@@ -5,96 +5,265 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AmendmentWatch — Stale-Answer Detector for Clinical Trial Protocols</title>
 <style>
+  :root{
+    --navy:#0b3d5c; --navy2:#0e4f75; --ink:#17222b; --muted:#5b6b76;
+    --bg:#f3f5f7; --card:#ffffff; --line:#dfe6ea;
+    --red:#8b0000; --red-bg:#fde8e8; --red-line:#e5a3a3;
+    --green:#145a1e; --green-bg:#e2f3e5; --green-line:#9ed0a8;
+    --amber:#664d03; --amber-bg:#fff3cd; --amber-line:#e3c878;
+    --blue-bg:#e8f1f7;
+  }
   *{box-sizing:border-box}
-  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;margin:0;color:#1a1a1a;background:#f6f7f9}
-  header{background:#0b3d5c;color:#fff;padding:28px 20px}
-  header h1{margin:0;font-size:28px}
-  header p{margin:6px 0 0;opacity:.9;max-width:720px}
-  main{max-width:860px;margin:0 auto;padding:20px}
-  .card{background:#fff;border:1px solid #ddd;border-radius:10px;padding:18px;margin-bottom:16px}
-  textarea{width:100%;min-height:90px;padding:10px;font-size:15px;border:1px solid #bbb;border-radius:6px}
-  button{background:#0b3d5c;color:#fff;border:0;border-radius:6px;padding:10px 16px;font-size:15px;cursor:pointer;margin:4px 4px 0 0}
-  button.secondary{background:#e8eef2;color:#0b3d5c}
-  .verdict{font-size:22px;font-weight:700;padding:12px;border-radius:8px;margin:0 0 12px}
-  .verdict.bad{background:#fde8e8;color:#8b0000}
-  .verdict.good{background:#e2f3e5;color:#145a1e}
-  .verdict.warn{background:#fff3cd;color:#664d03}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;margin:0;color:var(--ink);background:var(--bg);line-height:1.45}
+  header{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;padding:30px 22px 24px}
+  .wrap{max-width:1180px;margin:0 auto}
+  header h1{margin:0;font-size:34px;letter-spacing:-.5px}
+  header h1 span{color:#8fd3f4}
+  header p{margin:8px 0 0;opacity:.92;max-width:760px;font-size:16px}
+  .badges{margin-top:16px;display:flex;flex-wrap:wrap;gap:8px}
+  .badge{display:inline-block;padding:5px 12px;border-radius:999px;font-size:13px;font-weight:700;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35);color:#fff}
+  .badge.solid{background:#fff;color:var(--navy);border-color:#fff}
+  main{max-width:1180px;margin:0 auto;padding:22px}
+  .grid{display:grid;grid-template-columns:minmax(320px,420px) 1fr;gap:18px;align-items:start}
+  @media (max-width:900px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:18px;box-shadow:0 1px 4px rgba(16,42,67,.06)}
+  .card h2{margin:0 0 6px;font-size:19px}
+  .card h3{margin:18px 0 8px;font-size:15px}
+  .muted{color:var(--muted);font-size:13px}
+  label{font-weight:700;display:block;margin-bottom:6px}
+  textarea{width:100%;min-height:110px;padding:12px;font-size:15px;font-family:inherit;border:1.5px solid #b9c6ce;border-radius:9px;resize:vertical}
+  textarea:focus{outline:3px solid #bfe0f2;border-color:var(--navy2)}
+  .btn{background:var(--navy);color:#fff;border:0;border-radius:9px;padding:12px 18px;font-size:15px;font-weight:700;cursor:pointer;margin-top:10px}
+  .btn:hover{background:var(--navy2)}
+  .btn.ghost{background:#e8eef2;color:var(--navy);padding:9px 13px;font-size:14px}
+  .btn:disabled{opacity:.6;cursor:wait}
+  .seeded-list{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .seed-btn{text-align:left;background:#f7fafc;border:1.5px solid var(--line);border-radius:10px;padding:11px 12px;cursor:pointer;font-family:inherit}
+  .seed-btn:hover{border-color:var(--navy2);background:var(--blue-bg)}
+  .seed-btn.active{border-color:var(--navy);background:var(--blue-bg);box-shadow:0 0 0 2px #bfe0f2}
+  .seed-btn .sid{font-weight:800;font-size:14px}
+  .seed-btn .sdesc{font-size:13px;color:var(--muted);display:block;margin-top:2px}
+  .seed-btn .stag{float:right;font-size:12px;font-weight:800;padding:2px 9px;border-radius:999px}
+  .tag-stale{background:var(--red-bg);color:var(--red)}
+  .tag-current{background:var(--green-bg);color:var(--green)}
+  .tag-unknown{background:var(--amber-bg);color:var(--amber)}
+  .empty{border:2px dashed #c4d0d8;border-radius:14px;padding:34px 22px;text-align:center;color:var(--muted);background:#fbfcfd}
+  .empty strong{color:var(--ink);font-size:17px}
+  .verdict{font-size:24px;font-weight:800;padding:16px 18px;border-radius:12px;margin:0 0 14px;border:1.5px solid}
+  .verdict.bad{background:var(--red-bg);color:var(--red);border-color:var(--red-line)}
+  .verdict.good{background:var(--green-bg);color:var(--green);border-color:var(--green-line)}
+  .verdict.warn{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-line)}
+  .verdict small{display:block;font-size:14px;font-weight:500;margin-top:4px}
+  .score-row{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 14px}
+  .score{flex:1;min-width:110px;background:#f7fafc;border:1px solid var(--line);border-radius:10px;padding:10px 12px;text-align:center}
+  .score b{display:block;font-size:22px}
+  .score span{font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
   table{width:100%;border-collapse:collapse;font-size:14px}
-  th,td{border:1px solid #ddd;padding:8px;text-align:left;vertical-align:top}
-  th{background:#eef2f5}
-  .pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:12px;font-weight:700}
-  .Current{background:#d4edda}.Superseded{background:#f8d7da}.Unknown{background:#fff3cd}
-  .muted{color:#555;font-size:13px}
-  .clause{font-size:13px;background:#f6f7f9;border-left:3px solid #0b3d5c;padding:8px;margin:6px 0}
-  @media print{header,form,.noprint{display:none}body{background:#fff}.card{border:0}}
+  th,td{border:1px solid var(--line);padding:10px;text-align:left;vertical-align:top}
+  th{background:#eef2f5;font-size:13px}
+  .pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap}
+  .Current{background:#d4edda;color:var(--green)}
+  .Superseded{background:#f8d7da;color:var(--red)}
+  .Unknown{background:#fff3cd;color:var(--amber)}
+  .fresh{margin-top:6px}
+  .fresh .bar{height:8px;border-radius:99px;background:#e6ebee;overflow:hidden}
+  .fresh .fill{height:100%}
+  .fill.fresh100{background:#2e7d32}.fill.fresh0{background:#b3261e}.fill.freshna{background:#d9a400}
+  .fresh small{color:var(--muted)}
+  .clause{font-size:13px;background:#f6f7f9;border-left:3px solid var(--navy);padding:8px 10px;margin:6px 0;border-radius:0 6px 6px 0}
+  .clause.old{border-left-color:#b3261e;background:#fdf3f3}
+  .clause.old s{color:#7a1f1f}
+  .corrected{background:var(--blue-bg);border:1px solid #bcd8e8;border-radius:10px;padding:14px 16px;font-size:16px}
+  .steps{margin:0;padding-left:20px}
+  .steps li{margin:5px 0}
+  .legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .error{background:var(--red-bg);color:var(--red);border:1px solid var(--red-line);border-radius:10px;padding:12px 14px;font-weight:600}
+  @media print{
+    header,.noprint{display:none!important}
+    body{background:#fff}
+    .grid{grid-template-columns:1fr}
+    .card{border:1px solid #ccc;box-shadow:none;break-inside:avoid}
+  }
 </style>
 </head>
 <body>
 <header>
-  <h1>AmendmentWatch</h1>
-  <p>Paste an AI-generated answer to a site question. Every claim is checked against
-  protocol <strong>SYNTH-201, version 3 (in force)</strong> — and flagged if it was
-  true once, and is false now. Synthetic data only. Not medical advice.</p>
+  <div class="wrap">
+    <h1>AmendmentWatch <span>— Stale-Answer Detector</span></h1>
+    <p>Paste an AI-generated answer to a site question. Every claim is checked against
+    protocol <strong>SYNTH-201, version 3 (in force)</strong> — and flagged if it was
+    true once, and is false now. Synthetic data only. Not medical advice.</p>
+    <div class="badges">
+      <span class="badge solid">Protocol SYNTH-201 · v3 in force</span>
+      <span class="badge" id="modeBadge">Mode: checking…</span>
+      <span class="badge">76% of Phase 2/3 protocols are amended · avg 3.3 times</span>
+    </div>
+  </div>
 </header>
 <main>
-  <form class="card noprint" id="checkForm">
-    <label for="answer"><strong>Answer to check</strong></label>
-    <textarea id="answer" placeholder="e.g. Washout is 14 days before randomisation."></textarea>
+  <div class="grid">
     <div>
-      <button type="submit">Check this answer</button>
-      <button type="button" class="secondary" onclick="print()">Print / save as PDF</button>
+      <form class="card noprint" id="checkForm">
+        <h2>Check an answer</h2>
+        <label for="answer">AI-generated answer to a site question</label>
+        <textarea id="answer" placeholder="e.g. Washout is 14 days before randomisation."></textarea>
+        <div>
+          <button class="btn" type="submit" id="checkBtn">Check this answer</button>
+          <button type="button" class="btn ghost" onclick="window.print()">Print / save as PDF</button>
+        </div>
+        <p class="muted" id="formStatus"></p>
+      </form>
+
+      <div class="card noprint">
+        <h2>Try a seeded demo — one click</h2>
+        <p class="muted" style="margin-top:0">Each button runs a pre-built answer against protocol v3. No typing, no keys.</p>
+        <div class="seeded-list" id="seeded"><p class="muted">Loading seeded answers…</p></div>
+      </div>
+
+      <div class="card">
+        <h2>How it works</h2>
+        <ol class="steps">
+          <li><strong>Extract</strong> claims from the answer.</li>
+          <li><strong>Check</strong> each claim as data against the clause in force (v3), then v1/v2 — a match in an old version is <strong>Superseded</strong>.</li>
+          <li><strong>Score</strong> every claim: Current, Superseded or Unknown — never guessed.</li>
+          <li><strong>Correct</strong> the answer using only clauses in force.</li>
+        </ol>
+        <div class="legend">
+          <span class="pill Current">Current — matches v3</span>
+          <span class="pill Superseded">Superseded — matched an earlier version</span>
+          <span class="pill Unknown">Unknown — not settled, human must confirm</span>
+        </div>
+        <p class="muted">Tavily and Bifrost are optional live enhancements only. They never change a label. With no keys the app runs in seeded-offline mode and every demo works.</p>
+      </div>
     </div>
-    <p class="muted">Or try a seeded answer:</p>
-    <div id="seeded"></div>
-  </form>
-  <div id="report"></div>
-  <div class="card">
-    <h2>How it works</h2>
-    <p>1. Claims are extracted from the answer. 2. Each claim is compared, as data,
-    with the clause in force (v3), then with v1/v2 — a match in an old version is
-    <strong>Superseded</strong>. 3. Anything the protocol does not settle is
-    <strong>Unknown</strong> — never guessed. 4. The corrected answer is built only
-    from clauses in force.</p>
-    <p class="muted">Labels: <span class="pill Current">Current</span> matches v3.
-    <span class="pill Superseded">Superseded</span> matched an earlier version.
-    <span class="pill Unknown">Unknown</span> not settled by the protocol — a human must confirm.</p>
+
+    <div>
+      <div id="report">
+        <div class="empty">
+          <strong>No answer checked yet</strong>
+          <p>Click a seeded demo on the left — start with <strong>S1</strong> (stale washout), then <strong>C1</strong> (current) and <strong>U1</strong> (unknown) — or paste an answer and press <strong>Check this answer</strong>.</p>
+        </div>
+      </div>
+    </div>
   </div>
 </main>
 <script>
+const SEED_DESCRIPTIONS = {
+  S1: "Stale washout — 14 days (v2) vs 28 days (v3)",
+  S2: "Stale age + dose hold — 18 years, ALT >3× ULN",
+  S3: "Stale missed visit + fasting — 7 days, 8 hours",
+  C1: "Current — washout 28 days, fasting 10 hours",
+  C2: "Current — dose hold ALT >2× ULN, notify same day",
+  C3: "Current — age 21+, HbA1c up to 9.5%",
+  U1: "Unknown — pregnancy-testing interval, not in the protocol"
+};
+const SEED_TAGS = {S1:"Stale",S2:"Stale",S3:"Stale",C1:"Current",C2:"Current",C3:"Current",U1:"Unknown"};
+const SEED_TAG_CLASS = {S1:"tag-stale",S2:"tag-stale",S3:"tag-stale",C1:"tag-current",C2:"tag-current",C3:"tag-current",U1:"tag-unknown"};
+
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+
+async function loadHealth(){
+  try{
+    const r = await fetch('/health'); const d = await r.json();
+    document.getElementById('modeBadge').textContent =
+      'Mode: ' + d.mode + ' · Protocol ' + d.protocol + ' v' + d.protocol_version_in_force + ' in force';
+  }catch(e){
+    document.getElementById('modeBadge').textContent = 'Mode: seeded-offline';
+  }
+}
+
 async function loadSeeded(){
-  const r = await fetch('/api/seeded'); const d = await r.json();
-  document.getElementById('seeded').innerHTML = d.answers.map(a =>
-    `<button type="button" class="secondary" onclick="checkSeeded('${a.id}')">${a.id} — ${a.expected_verdict}</button>`).join('');
+  try{
+    const r = await fetch('/api/seeded'); const d = await r.json();
+    document.getElementById('seeded').innerHTML = d.answers.map(a =>
+      `<button type="button" class="seed-btn" data-seed="${esc(a.id)}" onclick="checkSeeded('${esc(a.id)}')">
+        <span class="stag ${SEED_TAG_CLASS[a.id]||''}">${esc(SEED_TAGS[a.id]||a.label)}</span>
+        <span class="sid">${esc(a.id)} — ${esc(a.expected_verdict)}</span>
+        <span class="sdesc">${esc(SEED_DESCRIPTIONS[a.id]||a.text)}</span>
+      </button>`).join('');
+  }catch(e){
+    document.getElementById('seeded').innerHTML = '<p class="error">Could not load seeded answers. Is the server running?</p>';
+  }
 }
+
+function freshness(c){
+  if(c.label === 'Current') return {score:100, text:'Freshness 100/100 — matches v3', cls:'fresh100'};
+  if(c.label === 'Superseded') return {score:0, text:'Freshness 0/100 — outdated, superseded by v3', cls:'fresh0'};
+  return {score:null, text:'Freshness — no score: not settled by the protocol', cls:'freshna'};
+}
+
 async function checkSeeded(id){
-  const r = await fetch('/demo/'+id); render(await r.json());
+  document.querySelectorAll('.seed-btn').forEach(b => b.classList.toggle('active', b.dataset.seed === id));
+  setStatus('Checking ' + id + '…');
+  try{
+    const r = await fetch('/demo/' + encodeURIComponent(id));
+    if(!r.ok) throw new Error('Server returned ' + r.status);
+    render(await r.json());
+    setStatus('');
+  }catch(e){ showError('Could not check ' + id + ': ' + e.message); setStatus(''); }
 }
+
+function setStatus(msg){ document.getElementById('formStatus').textContent = msg; }
+
+function showError(msg){
+  document.getElementById('report').innerHTML = '<div class="error">' + esc(msg) + '</div>';
+}
+
 document.getElementById('checkForm').addEventListener('submit', async e => {
   e.preventDefault();
   const answer = document.getElementById('answer').value;
-  const r = await fetch('/api/check', {method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({answer})});
-  render(await r.json());
+  if(!answer.trim()){ setStatus('Paste an answer first, or click a seeded demo.'); return; }
+  const btn = document.getElementById('checkBtn'); btn.disabled = true; setStatus('Checking…');
+  try{
+    const r = await fetch('/api/check', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({answer})});
+    if(!r.ok) throw new Error('Server returned ' + r.status);
+    render(await r.json());
+    setStatus('');
+  }catch(err){ showError('Could not check that answer: ' + err.message); setStatus(''); }
+  finally{ btn.disabled = false; }
 });
+
 function render(rep){
   const cls = rep.verdict === 'Safe to use' ? 'good' : rep.verdict === 'Do not use' ? 'bad' : 'warn';
-  const rows = rep.claims.map(c => `<tr>
-    <td>${c.claim}</td>
-    <td><span class="pill ${c.label}">${c.label}</span><br><small>${c.explanation||c.reason}</small></td>
-    <td>${c.current_clause ? `§${c.current_clause.section} (v3): ${c.current_clause.text}` : '—'}
-    ${c.superseded_clause ? `<br><s>§${c.superseded_clause.section}: ${c.superseded_clause.text}</s> ${c.amendment||''}` : ''}</td>
-  </tr>`).join('');
+  const verdictNote = rep.verdict === 'Do not use'
+    ? 'At least one claim was true under an earlier protocol version and is false now. Do not act on this answer.'
+    : rep.verdict === 'Needs human review'
+    ? 'At least one claim is not settled by the protocol in force. A human must confirm it — AmendmentWatch never guesses.'
+    : 'Every claim matches protocol v3 (in force).';
+  const rows = rep.claims.map(c => {
+    const f = freshness(c);
+    const width = f.score === null ? 100 : f.score;
+    return `<tr>
+    <td><strong>${esc(c.claim)}</strong><br><small class="muted">${esc(c.explanation || c.reason || '')}</small></td>
+    <td><span class="pill ${esc(c.label)}">${esc(c.label)}</span>
+      <div class="fresh"><div class="bar"><div class="fill ${f.cls}" style="width:${width}%"></div></div>
+      <small>${esc(f.text)}</small></div></td>
+    <td>
+      ${c.current_clause ? `<div class="clause">§${esc(c.current_clause.section)} (v3, in force): ${esc(c.current_clause.text)}</div>` : '<span class="muted">No clause in force addresses this topic.</span>'}
+      ${c.superseded_clause ? `<div class="clause old"><s>§${esc(c.superseded_clause.section)}: ${esc(c.superseded_clause.text)}</s><br><small>Superseded by ${esc(c.amendment || 'a later amendment')}</small></div>` : ''}
+    </td>
+  </tr>`;}).join('');
+  const tavilyNote = rep.tavily && rep.tavily.note ? `<p class="muted">Tavily: ${esc(rep.tavily.note)}</p>` : '';
   document.getElementById('report').innerHTML = `<div class="card">
-    <p class="verdict ${cls}">Verdict: ${rep.verdict}</p>
-    <p>Mode: ${rep.mode} &nbsp;·&nbsp; Claims: ${rep.summary.total} —
-    ${rep.summary.current} Current, ${rep.summary.superseded} Superseded, ${rep.summary.unknown} Unknown</p>
-    <table><tr><th>Claim</th><th>Freshness</th><th>Clause in force</th></tr>${rows}</table>
-    <h3>Corrected answer (from clauses in force only)</h3>
-    <p>${rep.corrected_answer}</p>
-    ${rep.tavily ? `<p class="muted">Tavily: ${rep.tavily.note}</p>` : ''}
-    <p class="muted">${rep.disclaimer}</p></div>`;
-  document.getElementById('report').scrollIntoView();
+    <p class="verdict ${cls}">Verdict: ${esc(rep.verdict)}<small>${esc(verdictNote)}</small></p>
+    <div class="score-row">
+      <div class="score"><b>${rep.summary.total}</b><span>Claims checked</span></div>
+      <div class="score"><b>${rep.summary.current}</b><span>Current</span></div>
+      <div class="score"><b>${rep.summary.superseded}</b><span>Superseded</span></div>
+      <div class="score"><b>${rep.summary.unknown}</b><span>Unknown</span></div>
+    </div>
+    <p class="muted">Mode: ${esc(rep.mode)} &nbsp;·&nbsp; Protocol SYNTH-201 v${esc(rep.protocol_version_in_force)} in force${rep.seeded_id ? ' &nbsp;·&nbsp; Seeded answer ' + esc(rep.seeded_id) : ''}</p>
+    <p><strong>Answer checked:</strong> ${esc(rep.answer)}</p>
+    <table><thead><tr><th>Claim</th><th>Freshness</th><th>Old vs new clause</th></tr></thead><tbody>${rows}</tbody></table>
+    <h3>Corrected answer — from clauses in force only</h3>
+    <p class="corrected">${esc(rep.corrected_answer)}</p>
+    ${tavilyNote}
+    <p class="muted">${esc(rep.disclaimer)}</p>
+  </div>`;
+  document.getElementById('report').scrollIntoView({behavior:'smooth', block:'start'});
 }
+loadHealth();
 loadSeeded();
 </script>
 </body>

@@ -18,9 +18,21 @@ Then open http://127.0.0.1:8000
 
 ## What to click (60 seconds)
 
-1. Click **S1** — "Washout is 14 days" → **Do not use**. §5.2 was 14 days in v2, is 28 days in v3. Corrected answer: 28 days.
-2. Click **C1** — all claims Current → **Safe to use**.
-3. Click **U1** — pregnancy-testing interval → **Unknown, Needs human review**. The tool never guesses.
+The dashboard opens with a header showing the SYNTH-201 v3 badge and the
+seeded-offline mode badge, a paste-an-answer box on the left, and the seven
+seeded demo buttons underneath it — each with a one-line description and a
+Stale / Current / Unknown tag. The report appears on the right.
+
+1. Click **S1** — "Stale washout — 14 days (v2) vs 28 days (v3)" → red
+   **Do not use** banner, freshness 0/100, old clause struck through beside
+   the v3 clause, corrected answer: 28 days.
+2. Click **C1** — "Current — washout 28 days, fasting 10 hours" → green
+   **Safe to use** banner, freshness 100/100 on both claims.
+3. Click **U1** — "Unknown — pregnancy-testing interval" → amber
+   **Needs human review** banner, no freshness score — the tool never guesses.
+4. Or paste any answer in the box and press **Check this answer** — the same
+   verdict banner, claim table, old-vs-new clauses, and corrected answer appear.
+   Print / save as PDF from the button above the seeded demos.
 
 ## No time to run it? Read the pre-run outputs
 
