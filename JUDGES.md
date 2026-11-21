@@ -1,5 +1,13 @@
 # For judges — read this first (2 minutes)
 
+## Live demo — use this first
+
+**Live demo: https://huggingface.co/spaces/ssinha/amendmentwatch** — Gradio, runs on ZeroGPU, no install, no API keys.
+
+Verified live: **S1 → Do not use, C1 → Safe to use, U1 → Needs human review.**
+
+**Judge note:** Hugging Face shows a "Guest quota reached" popup to visitors who are not logged in. Log in to Hugging Face with a free account first, then open the link — no PRO subscription is needed. If you do not want to log in, the fallback is the GitHub repo https://github.com/vigilai-stack/amendmentwatch — run `./run.sh` / `run.bat`, or read `demo/demo-output-S1.json` and `demo/demo-output-C1.json` for pre-run results.
+
 **You do not need to install Bifrost. You do not need Tavily, OpenAI, or any API key. You do not need to install anything except Python packages.**
 
 AmendmentWatch runs fully in **seeded-offline mode** with no keys and no Bifrost. The deterministic checker decides every label. Tavily and Bifrost are optional live enhancements only — they never change a label, and the demo is complete without them.
