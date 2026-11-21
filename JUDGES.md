@@ -28,7 +28,7 @@ Then open http://127.0.0.1:8000
 
 The dashboard opens with a header showing the SYNTH-201 v3 badge and the
 seeded-offline mode badge, a paste-an-answer box on the left, and the seven
-seeded demo buttons underneath it — each with a one-line description and a
+seeded demo buttons underneath it — in a dark cyberpunk theme (neon cyan/magenta, monospace). The footer credits the builder in large bold neon text: Sangeeta Sinha, Sangeeta@vigilaisolutions.com. — each with a one-line description and a
 Stale / Current / Unknown tag. The report appears on the right.
 
 1. Click **S1** — "Stale washout — 14 days (v2) vs 28 days (v3)" → red
