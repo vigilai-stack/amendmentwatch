@@ -49,7 +49,7 @@ Stale / Current / Unknown tag. The report appears on the right.
 
 ## What Bifrost and Tavily actually do here
 
-- **Bifrost** is a local gateway the *developer* runs to reach an LLM for one-sentence explanations. Judges do not run it. If it is absent, explanations fall back to the deterministic reason strings — labels and verdicts are identical.
+- **Bifrost** is a local gateway, not a model — the *developer* runs it (default `http://localhost:8080/v1`) to reach OpenAI gpt-4o-mini for one-sentence explanations of a verdict the checker has already decided. It does not extract claims and does not decide labels. Judges do not run it. If it is absent, explanations fall back to the deterministic reason strings — labels and verdicts are identical. In seeded-offline mode neither Bifrost nor OpenAI runs at all.
 - **Tavily** re-verifies external references cited in an answer. With no key, that step is skipped and noted in the report. Labels and verdicts are identical.
 
 `GET /health` proves this: with no keys it returns `"mode": "seeded-offline"`, `"tavily_available": false`, `"bifrost_available": false`, and the app still returns correct verdicts.
