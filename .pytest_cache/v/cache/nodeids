@@ -1,0 +1,13 @@
+[
+  "tests/test_checker.py::test_c1_all_current",
+  "tests/test_checker.py::test_c2_all_current",
+  "tests/test_checker.py::test_c3_all_current",
+  "tests/test_checker.py::test_corrected_answer_uses_current_clause_only",
+  "tests/test_checker.py::test_free_text_c1_matches_seeded",
+  "tests/test_checker.py::test_free_text_s1_matches_seeded",
+  "tests/test_checker.py::test_s1_superseded_washout",
+  "tests/test_checker.py::test_s2_both_superseded",
+  "tests/test_checker.py::test_s3_both_superseded",
+  "tests/test_checker.py::test_u1_unknown_edge_case",
+  "tests/test_checker.py::test_unknown_never_guessed"
+]

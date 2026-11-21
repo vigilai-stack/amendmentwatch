@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AmendmentWatch — Stale-Answer Detector for Clinical Trial Protocols</title>
+<style>
+  *{box-sizing:border-box}
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;margin:0;color:#1a1a1a;background:#f6f7f9}
+  header{background:#0b3d5c;color:#fff;padding:28px 20px}
+  header h1{margin:0;font-size:28px}
+  header p{margin:6px 0 0;opacity:.9;max-width:720px}
+  main{max-width:860px;margin:0 auto;padding:20px}
+  .card{background:#fff;border:1px solid #ddd;border-radius:10px;padding:18px;margin-bottom:16px}
+  textarea{width:100%;min-height:90px;padding:10px;font-size:15px;border:1px solid #bbb;border-radius:6px}
+  button{background:#0b3d5c;color:#fff;border:0;border-radius:6px;padding:10px 16px;font-size:15px;cursor:pointer;margin:4px 4px 0 0}
+  button.secondary{background:#e8eef2;color:#0b3d5c}
+  .verdict{font-size:22px;font-weight:700;padding:12px;border-radius:8px;margin:0 0 12px}
+  .verdict.bad{background:#fde8e8;color:#8b0000}
+  .verdict.good{background:#e2f3e5;color:#145a1e}
+  .verdict.warn{background:#fff3cd;color:#664d03}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{border:1px solid #ddd;padding:8px;text-align:left;vertical-align:top}
+  th{background:#eef2f5}
+  .pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:12px;font-weight:700}
+  .Current{background:#d4edda}.Superseded{background:#f8d7da}.Unknown{background:#fff3cd}
+  .muted{color:#555;font-size:13px}
+  .clause{font-size:13px;background:#f6f7f9;border-left:3px solid #0b3d5c;padding:8px;margin:6px 0}
+  @media print{header,form,.noprint{display:none}body{background:#fff}.card{border:0}}
+</style>
+</head>
+<body>
+<header>
+  <h1>AmendmentWatch</h1>
+  <p>Paste an AI-generated answer to a site question. Every claim is checked against
+  protocol <strong>SYNTH-201, version 3 (in force)</strong> — and flagged if it was
+  true once, and is false now. Synthetic data only. Not medical advice.</p>
+</header>
+<main>
+  <form class="card noprint" id="checkForm">
+    <label for="answer"><strong>Answer to check</strong></label>
+    <textarea id="answer" placeholder="e.g. Washout is 14 days before randomisation."></textarea>
+    <div>
+      <button type="submit">Check this answer</button>
+      <button type="button" class="secondary" onclick="print()">Print / save as PDF</button>
+    </div>
+    <p class="muted">Or try a seeded answer:</p>
+    <div id="seeded"></div>
+  </form>
+  <div id="report"></div>
+  <div class="card">
+    <h2>How it works</h2>
+    <p>1. Claims are extracted from the answer. 2. Each claim is compared, as data,
+    with the clause in force (v3), then with v1/v2 — a match in an old version is
+    <strong>Superseded</strong>. 3. Anything the protocol does not settle is
+    <strong>Unknown</strong> — never guessed. 4. The corrected answer is built only
+    from clauses in force.</p>
+    <p class="muted">Labels: <span class="pill Current">Current</span> matches v3.
+    <span class="pill Superseded">Superseded</span> matched an earlier version.
+    <span class="pill Unknown">Unknown</span> not settled by the protocol — a human must confirm.</p>
+  </div>
+</main>
+<script>
+async function loadSeeded(){
+  const r = await fetch('/api/seeded'); const d = await r.json();
+  document.getElementById('seeded').innerHTML = d.answers.map(a =>
+    `<button type="button" class="secondary" onclick="checkSeeded('${a.id}')">${a.id} — ${a.expected_verdict}</button>`).join('');
+}
+async function checkSeeded(id){
+  const r = await fetch('/demo/'+id); render(await r.json());
+}
+document.getElementById('checkForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const answer = document.getElementById('answer').value;
+  const r = await fetch('/api/check', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({answer})});
+  render(await r.json());
+});
+function render(rep){
+  const cls = rep.verdict === 'Safe to use' ? 'good' : rep.verdict === 'Do not use' ? 'bad' : 'warn';
+  const rows = rep.claims.map(c => `<tr>
+    <td>${c.claim}</td>
+    <td><span class="pill ${c.label}">${c.label}</span><br><small>${c.explanation||c.reason}</small></td>
+    <td>${c.current_clause ? `§${c.current_clause.section} (v3): ${c.current_clause.text}` : '—'}
+    ${c.superseded_clause ? `<br><s>§${c.superseded_clause.section}: ${c.superseded_clause.text}</s> ${c.amendment||''}` : ''}</td>
+  </tr>`).join('');
+  document.getElementById('report').innerHTML = `<div class="card">
+    <p class="verdict ${cls}">Verdict: ${rep.verdict}</p>
+    <p>Mode: ${rep.mode} &nbsp;·&nbsp; Claims: ${rep.summary.total} —
+    ${rep.summary.current} Current, ${rep.summary.superseded} Superseded, ${rep.summary.unknown} Unknown</p>
+    <table><tr><th>Claim</th><th>Freshness</th><th>Clause in force</th></tr>${rows}</table>
+    <h3>Corrected answer (from clauses in force only)</h3>
+    <p>${rep.corrected_answer}</p>
+    ${rep.tavily ? `<p class="muted">Tavily: ${rep.tavily.note}</p>` : ''}
+    <p class="muted">${rep.disclaimer}</p></div>`;
+  document.getElementById('report').scrollIntoView();
+}
+loadSeeded();
+</script>
+</body>
+</html>
