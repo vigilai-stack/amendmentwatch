@@ -2,11 +2,12 @@
 
 Deterministic, rule-based extraction is the default and always runs:
 it scans pasted text for the six clause topics in SYNTH-201 plus the
-known Unknown topic (pregnancy testing). The LLM (via Bifrost, see
-bifrost_client.py) is used only to extract claims and explain verdicts
-in plain language — it never overrides a label the checker settled.
-If no Bifrost key is set, extraction is rule-based only and the report
-says so plainly.
+known Unknown topic (pregnancy testing). Claim extraction is rule-based
+only — no model extracts claims. OpenAI gpt-4o-mini, reached through the
+Bifrost local gateway (see bifrost_client.py), is used only to explain a
+verdict in plain language — it never overrides a label the checker settled.
+If no Bifrost key is set, the report says so plainly and neither Bifrost
+nor OpenAI runs.
 """
 from __future__ import annotations
 
